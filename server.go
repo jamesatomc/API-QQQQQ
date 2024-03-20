@@ -42,7 +42,8 @@ func serveApplication() {
 	server.POST("/users", controllers.CreateUser)
 	server.POST("/login", controllers.Login)
 	server.GET("/users/:id", controllers.FindUser)
-	server.PATCH("/users/:id", controllers.UpdateUser)
+	server.PATCH("/update/users/:id", controllers.UpdateUser)
+	server.PATCH("/updatepassword/:id", controllers.UpdatePassword)
 	server.DELETE("/users/:id", controllers.DeleteUser)
 	
 
