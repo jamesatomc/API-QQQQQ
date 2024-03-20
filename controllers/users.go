@@ -65,7 +65,7 @@ func FindUser(c *gin.Context) {
 
 func UpdateUser(c *gin.Context) {
 	// Get model if exist
-	var user models.User
+	var user models.UpdateUserInput
 	if err := models.Database.Where("id = ?", c.Param("id")).First(&user).Error; err != nil {
 	  c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
 	  return
@@ -81,7 +81,7 @@ func UpdateUser(c *gin.Context) {
 	hashedPassword := sha256.Sum256([]byte(input.Password))
 	hashedString := hex.EncodeToString(hashedPassword[:])
 
-	user = models.User{
+	user = models.UpdateUserInput{
 		Username: input.Username,
 		Email:   input.Email,
 		Password: hashedString,
