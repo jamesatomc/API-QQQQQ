@@ -77,6 +77,15 @@ func UpdateUser(c *gin.Context) {
 	  c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	  return
 	}
+
+	hashedPassword := sha256.Sum256([]byte(input.Password))
+	hashedString := hex.EncodeToString(hashedPassword[:])
+
+	user = models.User{
+		Username: input.Username,
+		Email:   input.Email,
+		Password: hashedString,
+	}
   
 	models.Database.Model(&user).Updates(input)
   
