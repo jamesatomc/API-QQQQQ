@@ -3,12 +3,12 @@ package controllers
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
-	
 
 	"github.com/jamesatomc/go-api/models"
 	"gorm.io/gorm"
@@ -183,4 +183,36 @@ func UpdatePassword(c *gin.Context) {
     models.Database.Model(&user).Update("password", newPasswordHashedString)
 
     c.JSON(http.StatusOK, gin.H{"message": "Password updated successfully"})
+}
+
+func AuthenticationMiddleware() gin.HandlerFunc {
+    return func(c *gin.Context) {
+        tokenString := c.GetHeader("Authorization") 
+        if tokenString == "" {
+            c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization token required"})
+            c.Abort()
+            return
+        }
+
+        token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+            if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+                return nil, fmt.Errorf("Unexpected signing method")
+            }
+            return []byte("your_strong_secret_key"), nil
+        })
+        if err != nil {
+            c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+            c.Abort()
+            return
+        }
+
+        if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+            c.Set("user_id", claims["user_id"])
+            c.Next()
+        } else {
+            c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+            c.Abort()
+            return
+        }
+    }
 }

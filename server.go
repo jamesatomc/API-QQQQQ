@@ -43,7 +43,7 @@ func serveApplication() {
 	server.POST("/login", controllers.Login)
 	server.GET("/users/:id", controllers.FindUser)
 	server.PATCH("/update/users/:id", controllers.UpdateUser)
-	server.PATCH("/updatepassword/:id", controllers.UpdatePassword)
+	server.PUT("/users/password", controllers.UpdatePassword)
 	server.DELETE("/users/:id", controllers.DeleteUser)
 	
 
