@@ -30,7 +30,14 @@ type CreateUserInput struct {
 type UpdateUserInput struct {
 	Username 	string 	`json:"username"`
 	Email    	string 	`json:"email" binding:"email"`
-	Password 	string 	`json:"password" binding:"min=8"`
+	
 }
 
+type UpdatePasswordInput struct {
+	
+		OldPassword string `json:"oldPassword" binding:"required"`
+		NewPassword string `json:"newPassword" binding:"required"` 
+		// Consider adding password complexity requirements here
+	
+}
 

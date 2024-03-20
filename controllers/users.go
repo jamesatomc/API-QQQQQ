@@ -64,32 +64,23 @@ func FindUser(c *gin.Context) {
 
 
 func UpdateUser(c *gin.Context) {
-	// Get model if exist
-	var user models.UpdateUserInput
-	if err := models.Database.Where("id = ?", c.Param("id")).First(&user).Error; err != nil {
-	  c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
-	  return
-	}
+    // Get model if exist
+    var user models.User
+    if err := models.Database.Where("id = ?", c.Param("id")).First(&user).Error; err != nil {
+      c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
+      return
+    }
   
-	// Validate input
-	var input models.UpdateUserInput
-	if err := c.ShouldBindJSON(&input); err != nil {
-	  c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	  return
-	}
-
-	hashedPassword := sha256.Sum256([]byte(input.Password))
-	hashedString := hex.EncodeToString(hashedPassword[:])
-
-	user = models.UpdateUserInput{
-		Username: input.Username,
-		Email:   input.Email,
-		Password: hashedString,
-	}
+    // Validate input
+    var input models.UpdateUserInput
+    if err := c.ShouldBindJSON(&input); err != nil {
+      c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+      return
+    }
   
-	models.Database.Model(&user).Updates(input)
+    models.Database.Model(&user).Updates(input)
   
-	c.JSON(http.StatusOK, gin.H{"data": user})
+    c.JSON(http.StatusOK, gin.H{"data": user})
 }
 
 
@@ -153,6 +144,43 @@ func GenerateToken(userID uint) (string, error) {
    if err != nil {
        return "", err
    }
-// 
+
    return tokenString, nil
+}
+
+func UpdatePassword(c *gin.Context) {
+    userID, exists := c.Get("user_id")
+    if !exists {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication required"})
+        return
+    }
+
+    var input models.UpdatePasswordInput
+    if err := c.ShouldBindJSON(&input); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    // Find the user
+    var user models.User
+    if err := models.Database.Where("id = ?", userID).First(&user).Error; err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "User not found"})
+        return
+    }
+
+    // Verify old password
+    oldPasswordHash := sha256.Sum256([]byte(input.OldPassword))
+    if hex.EncodeToString(oldPasswordHash[:]) != user.Password {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Incorrect old password"})
+        return
+    }
+
+    // Hash new password
+    newPasswordHash := sha256.Sum256([]byte(input.NewPassword))
+    newPasswordHashedString := hex.EncodeToString(newPasswordHash[:])
+
+    // Update password
+    models.Database.Model(&user).Update("password", newPasswordHashedString)
+
+    c.JSON(http.StatusOK, gin.H{"message": "Password updated successfully"})
 }
