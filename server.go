@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jamesatomc/go-api/DB"
 	"github.com/jamesatomc/go-api/controllers"
 	"github.com/jamesatomc/go-api/models"
 	"github.com/joho/godotenv"
@@ -26,8 +27,8 @@ func loadEnv() {
 }
 
 func loadDatabase() {
-    models.ConnectDatabase()
-	models.Database.AutoMigrate(&models.User{})
+    db.ConnectDatabase()
+	db.Database.AutoMigrate(&models.User{})
 }
 
 
@@ -35,7 +36,7 @@ func serveApplication() {
 
 	server := gin.Default()
 
-	models.ConnectDatabase()
+	db.ConnectDatabase()
 	
 	// User
 	server.GET("/users", controllers.FindUsers)

@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 
+	"github.com/jamesatomc/go-api/DB"
 	"github.com/jamesatomc/go-api/models"
 	"gorm.io/gorm"
 )
@@ -16,7 +17,7 @@ import (
 
 func FindUsers(c *gin.Context) {
 	var users []models.User
-	models.Database.Find(&users)
+	db.Database.Find(&users)
 
 	c.JSON(http.StatusOK, gin.H{"data": users})
 }
@@ -40,7 +41,7 @@ func CreateUser(c *gin.Context) {
 		LastName:  input.LastName,
 	}
 
-	models.Database.Create(&user)
+	db.Database.Create(&user)
 
 	c.JSON(http.StatusOK, gin.H{"data": user})
 }
@@ -48,7 +49,7 @@ func CreateUser(c *gin.Context) {
 func FindUser(c *gin.Context) {
 	var user models.User
 
-	if err := models.Database.Where("id = ?", c.Param("id")).First(&user).Error; err != nil {
+	if err := db.Database.Where("id = ?", c.Param("id")).First(&user).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		} else {
@@ -65,7 +66,7 @@ func FindUser(c *gin.Context) {
 func UpdateUser(c *gin.Context) {
     // Get model if exist
     var user models.User
-    if err := models.Database.Where("id = ?", c.Param("id")).First(&user).Error; err != nil {
+    if err := db.Database.Where("id = ?", c.Param("id")).First(&user).Error; err != nil {
       c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
       return
     }
@@ -77,7 +78,7 @@ func UpdateUser(c *gin.Context) {
       return
     }
   
-    models.Database.Model(&user).Updates(input)
+    db.Database.Model(&user).Updates(input)
   
     c.JSON(http.StatusOK, gin.H{"data": user})
 }
@@ -86,12 +87,12 @@ func UpdateUser(c *gin.Context) {
 func DeleteUser(c *gin.Context) {
 	// Get model if exist
 	var user models.User
-	if err := models.Database.Where("usernames = ?", c.Param("id")).First(&user).Error; err != nil {
+	if err := db.Database.Where("usernames = ?", c.Param("id")).First(&user).Error; err != nil {
 	  c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
 	  return
 	}
   
-	models.Database.Delete(&user)
+	db.Database.Delete(&user)
   
 	c.JSON(http.StatusOK, gin.H{"data": true})
 }
@@ -105,7 +106,7 @@ func Login(c *gin.Context) {
     }
 
     var user models.User
-    if err := models.Database.Where("username = ?", input.Username).First(&user).Error; err != nil {
+    if err := db.Database.Where("username = ?", input.Username).First(&user).Error; err != nil {
         if err == gorm.ErrRecordNotFound {
             c.JSON(http.StatusUnauthorized, gin.H{"error": "Incorrect username or password"})
             return
@@ -156,7 +157,7 @@ func UpdatePassword(c *gin.Context) {
 
     // 1. Find the user by username
     var user models.User
-    if err := models.Database.Where("username = ?", input.Username).First(&user).Error; err != nil {
+    if err := db.Database.Where("username = ?", input.Username).First(&user).Error; err != nil {
         if err == gorm.ErrRecordNotFound {
             c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
         } else {
@@ -177,7 +178,7 @@ func UpdatePassword(c *gin.Context) {
     newPasswordHashedString := hex.EncodeToString(newPasswordHash[:])
 
     // 4. Update the user's password
-    models.Database.Model(&user).Update("password", newPasswordHashedString)
+    db.Database.Model(&user).Update("password", newPasswordHashedString)
 
     c.JSON(http.StatusOK, gin.H{"message": "Password updated successfully"})
 }
