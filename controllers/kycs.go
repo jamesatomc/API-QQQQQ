@@ -19,8 +19,6 @@ func CreateKYC(c *gin.Context) {
         return
     }
 
-    // Handle image upload (if applicable)
-    // ...
 
     kyc := models.KYCInput{
         UserID:         userID.(uint),

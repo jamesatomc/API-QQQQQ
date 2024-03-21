@@ -41,14 +41,15 @@ func serveApplication() {
 	// User
 	server.GET("/users", controllers.FindUsers)
 	server.GET("/users/:id", controllers.FindUser)
-
 	server.POST("/register", controllers.CreateUser)
 	server.POST("/login", controllers.Login)
-	
 	server.PATCH("/update-users/:id", controllers.UpdateUser)
 	server.PATCH("/change-password/", controllers.UpdatePassword)
-	
 	server.DELETE("/users/:id", controllers.DeleteUser)
+
+
+	// KYC
+	server.POST("/kyc", controllers.CreateKYC)
 	
 
 	server.Run()
