@@ -148,39 +148,36 @@ func GenerateToken(userID uint) (string, error) {
 }
 
 func UpdatePassword(c *gin.Context) {
-    userID, exists := c.Get("user_id")
-    if !exists {
-        c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication required"})
-        return
-    }
-
     var input models.UpdatePasswordInput
     if err := c.ShouldBindJSON(&input); err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
 
-    // Find the user
+    // 1. Find the user by username
     var user models.User
-    if err := models.Database.Where("id = ?", userID).First(&user).Error; err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "User not found"})
+    if err := models.Database.Where("username = ?", input.Username).First(&user).Error; err != nil {
+        if err == gorm.ErrRecordNotFound {
+            c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+        } else {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Error finding user"})
+        }
         return
     }
 
-    // Verify old password
-    PasswordHash := sha256.Sum256([]byte(input.Password))
-    if hex.EncodeToString(PasswordHash[:]) != user.Password {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "Incorrect old password"})
+    // 2. Verify old password
+    oldPasswordHash := sha256.Sum256([]byte(input.OldPassword))
+    if hex.EncodeToString(oldPasswordHash[:]) != user.Password {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Incorrect old password"})
         return
     }
 
-    // Hash new password
+    // 3. Hash the new password
     newPasswordHash := sha256.Sum256([]byte(input.NewPassword))
     newPasswordHashedString := hex.EncodeToString(newPasswordHash[:])
 
-    // Update password
+    // 4. Update the user's password
     models.Database.Model(&user).Update("password", newPasswordHashedString)
 
     c.JSON(http.StatusOK, gin.H{"message": "Password updated successfully"})
 }
-

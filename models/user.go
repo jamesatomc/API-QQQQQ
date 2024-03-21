@@ -34,10 +34,8 @@ type UpdateUserInput struct {
 }
 
 type UpdatePasswordInput struct {
-	
-		Password string `json:"password" binding:"required"`
-		NewPassword string `json:"newpassword" binding:"required"` 
-		// Consider adding password complexity requirements here
-	
+    Username    string `json:"username" binding:"required"`
+    OldPassword string `json:"oldPassword" binding:"required"`
+    NewPassword string `json:"newPassword" binding:"required,min=8"` // Example: minimum 8 characters 
 }
 
