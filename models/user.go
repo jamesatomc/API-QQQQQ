@@ -27,7 +27,6 @@ type CreateUserInput struct {
 type UpdateUserInput struct {
 	Username 	string 	`json:"username"`
 	Email    	string 	`json:"email" binding:"email"`
-	
 }
 
 type UpdatePasswordInput struct {

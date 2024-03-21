@@ -84,20 +84,6 @@ func UpdateUser(c *gin.Context) {
 }
 
 
-func DeleteUser(c *gin.Context) {
-	// Get model if exist
-	var user models.User
-	if err := db.Database.Where("usernames = ?", c.Param("id")).First(&user).Error; err != nil {
-	  c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
-	  return
-	}
-  
-	db.Database.Delete(&user)
-  
-	c.JSON(http.StatusOK, gin.H{"data": true})
-}
-
-
 func Login(c *gin.Context) {
     var input models.User
     if err := c.ShouldBindJSON(&input); err != nil {
@@ -131,6 +117,19 @@ func Login(c *gin.Context) {
     }
 
     c.JSON(http.StatusOK, gin.H{"token": token})
+}
+
+func DeleteUser(c *gin.Context) {
+	// Get model if exist
+	var user models.User
+	if err := db.Database.Where("usernames = ?", c.Param("id")).First(&user).Error; err != nil {
+	  c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
+	  return
+	}
+  
+	db.Database.Delete(&user)
+  
+	c.JSON(http.StatusOK, gin.H{"data": true})
 }
 
 func GenerateToken(userID uint) (string, error) {
