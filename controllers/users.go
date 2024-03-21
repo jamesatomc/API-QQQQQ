@@ -17,7 +17,7 @@ import (
 
 func FindUsers(c *gin.Context) {
 	var users []models.User
-	db.Database.Find(&users)
+	connect.Database.Find(&users)
 
 	c.JSON(http.StatusOK, gin.H{"data": users})
 }
@@ -41,7 +41,7 @@ func CreateUser(c *gin.Context) {
 		LastName:  input.LastName,
 	}
 
-	db.Database.Create(&user)
+	connect.Database.Create(&user)
 
 	c.JSON(http.StatusOK, gin.H{"data": user})
 }
@@ -49,7 +49,7 @@ func CreateUser(c *gin.Context) {
 func FindUser(c *gin.Context) {
 	var user models.User
 
-	if err := db.Database.Where("id = ?", c.Param("id")).First(&user).Error; err != nil {
+	if err := connect.Database.Where("id = ?", c.Param("id")).First(&user).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		} else {
@@ -66,7 +66,7 @@ func FindUser(c *gin.Context) {
 func UpdateUser(c *gin.Context) {
     // Get model if exist
     var user models.User
-    if err := db.Database.Where("id = ?", c.Param("id")).First(&user).Error; err != nil {
+    if err := connect.Database.Where("id = ?", c.Param("id")).First(&user).Error; err != nil {
       c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
       return
     }
@@ -78,7 +78,7 @@ func UpdateUser(c *gin.Context) {
       return
     }
   
-    db.Database.Model(&user).Updates(input)
+    connect.Database.Model(&user).Updates(input)
   
     c.JSON(http.StatusOK, gin.H{"data": user})
 }
@@ -92,7 +92,7 @@ func Login(c *gin.Context) {
     }
 
     var user models.User
-    if err := db.Database.Where("username = ?", input.Username).First(&user).Error; err != nil {
+    if err := connect.Database.Where("username = ?", input.Username).First(&user).Error; err != nil {
         if err == gorm.ErrRecordNotFound {
             c.JSON(http.StatusUnauthorized, gin.H{"error": "Incorrect username or password"})
             return
@@ -122,12 +122,12 @@ func Login(c *gin.Context) {
 func DeleteUser(c *gin.Context) {
 	// Get model if exist
 	var user models.User
-	if err := db.Database.Where("usernames = ?", c.Param("id")).First(&user).Error; err != nil {
+	if err := connect.Database.Where("usernames = ?", c.Param("id")).First(&user).Error; err != nil {
 	  c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
 	  return
 	}
   
-	db.Database.Delete(&user)
+	connect.Database.Delete(&user)
   
 	c.JSON(http.StatusOK, gin.H{"data": true})
 }
@@ -156,7 +156,7 @@ func UpdatePassword(c *gin.Context) {
 
     // 1. Find the user by username
     var user models.User
-    if err := db.Database.Where("username = ?", input.Username).First(&user).Error; err != nil {
+    if err := connect.Database.Where("username = ?", input.Username).First(&user).Error; err != nil {
         if err == gorm.ErrRecordNotFound {
             c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
         } else {
@@ -177,7 +177,7 @@ func UpdatePassword(c *gin.Context) {
     newPasswordHashedString := hex.EncodeToString(newPasswordHash[:])
 
     // 4. Update the user's password
-    db.Database.Model(&user).Update("password", newPasswordHashedString)
+    connect.Database.Model(&user).Update("password", newPasswordHashedString)
 
     c.JSON(http.StatusOK, gin.H{"message": "Password updated successfully"})
 }

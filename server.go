@@ -27,8 +27,8 @@ func loadEnv() {
 }
 
 func loadDatabase() {
-    db.ConnectDatabase()
-	db.Database.AutoMigrate(&models.User{})
+    connect.ConnectDatabase()
+	connect.Database.AutoMigrate(&models.User{})
 }
 
 
@@ -36,7 +36,7 @@ func serveApplication() {
 
 	server := gin.Default()
 
-	db.ConnectDatabase()
+	connect.ConnectDatabase()
 	
 	// User
 	server.GET("/users", controllers.FindUsers)
