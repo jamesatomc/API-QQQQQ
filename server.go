@@ -49,7 +49,7 @@ func serveApplication() {
 
 
 	// KYC
-	server.POST("/kyc", controllers.CreateKYC)
+	server.POST("/kyc:id", controllers.CreateKYC)
 	
 
 	server.Run()
