@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jamesatomc/go-api/DB"
+	"github.com/jamesatomc/go-api/db"
 	"github.com/jamesatomc/go-api/controllers"
 	"github.com/jamesatomc/go-api/models"
 	"github.com/joho/godotenv"

@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 
-	"github.com/jamesatomc/go-api/DB"
+	"github.com/jamesatomc/go-api/db"
 	"github.com/jamesatomc/go-api/models"
 	"gorm.io/gorm"
 )
