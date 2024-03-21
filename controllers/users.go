@@ -86,7 +86,7 @@ func UpdateUser(c *gin.Context) {
 func DeleteUser(c *gin.Context) {
 	// Get model if exist
 	var user models.User
-	if err := models.Database.Where("id = ?", c.Param("id")).First(&user).Error; err != nil {
+	if err := models.Database.Where("usernames = ?", c.Param("id")).First(&user).Error; err != nil {
 	  c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
 	  return
 	}
