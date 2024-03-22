@@ -45,7 +45,7 @@ func serveApplication() {
 	server.POST("/login", controllers.Login)
 	server.PATCH("/update-users/:id", controllers.UpdateUser)
 	server.PATCH("/change-password", controllers.UpdatePassword)
-	server.DELETE("/users", controllers.DeleteUser)
+	server.DELETE("/users/:id", controllers.DeleteUser)
 
 
 	// KYC
