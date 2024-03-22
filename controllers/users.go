@@ -1,36 +1,34 @@
 package controllers
 
 import (
-	// "crypto/sha256"
-	// "encoding/hex"
-    
 	"net/http"
 	"time"
 
+	"github.com/alexedwards/argon2id"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
-	// "golang.org/x/crypto/bcrypt"
 
-    "github.com/alexedwards/argon2id"
+	// "golang.org/x/crypto/bcrypt"
 
 	"github.com/jamesatomc/go-api/db"
 	"github.com/jamesatomc/go-api/models"
 	"gorm.io/gorm"
 )
 
+// Argon2 Hashing Function
+func hashPassword(password string) (string, error) {
+    hash, err := argon2id.CreateHash(password, argon2id.DefaultParams)
+    if err != nil {
+        return "", err
+    }
+    return hash, nil 
+}
 
-// func hashPassword(password string) (string, error) {
-//     hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost) // Adjust cost as needed
-//     if err != nil {
-//       return "", err
-//     }
-//     return string(hash), nil
-// }
-  
-// func comparePassword(hashedPassword, password string) bool {
-//     err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
-//     return err == nil
-// }
+// Argon2 Password Comparison Function
+func comparePassword(hashedPassword, password string) bool {
+    match, err := argon2id.ComparePasswordAndHash(password, hashedPassword)
+    return err == nil && match 
+}
 
 func FindUsers(c *gin.Context) {
 	var users []models.User
@@ -47,16 +45,7 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	// hashedPassword := sha256.Sum256([]byte(input.Password))
-	// hashedString := hex.EncodeToString(hashedPassword[:])
-
-    // hashedPassword, err := hashPassword(input.Password)
-    // if err != nil {
-    //     c.JSON(http.StatusInternalServerError, gin.H{"error": "Error hashing password"})
-    //     return
-    // }
-
-    hashedPassword, err := argon2id.CreateHash(input.Password, argon2id.DefaultParams)
+    hashedPassword, err := hashPassword(input.Password)
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Error hashing password"})
         return
@@ -89,8 +78,6 @@ func FindUser(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"data": user})
 }
-
-
 
 func UpdateUser(c *gin.Context) {
     // Get model if exist
@@ -132,26 +119,10 @@ func Login(c *gin.Context) {
     }
 
     // Compare hashed password
-    // inputHash := sha256.Sum256([]byte(input.Password))
-    // if hex.EncodeToString(inputHash[:]) != user.Password {
-    //     c.JSON(http.StatusUnauthorized, gin.H{"error": "Incorrect username or password"})
-    //     return
-    // }
-
-    // if !comparePassword(user.Password, input.Password) {
-    //     c.JSON(http.StatusUnauthorized, gin.H{"error": "Incorrect username or password"})
-    //     return
-    // }
-
-    match, err := argon2id.ComparePasswordAndHash(input.Password, user.Password) 
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Error verifying password"})
-        return 
-    }
-    if !match {
+    if !comparePassword(user.Password, input.Password) {
         c.JSON(http.StatusUnauthorized, gin.H{"error": "Incorrect username or password"})
         return
-    } 
+    }
 
     // Generate authentication token (consider using JWT)
     token, err := GenerateToken(user.ID) 
@@ -221,50 +192,20 @@ func UpdatePassword(c *gin.Context) {
     }
 
     // 2. Verify old password
-    // oldPasswordHash := sha256.Sum256([]byte(input.OldPassword))
-    // if hex.EncodeToString(oldPasswordHash[:]) != user.Password {
-    //     c.JSON(http.StatusUnauthorized, gin.H{"error": "Incorrect old password"})
-    //     return
-    // }
-
-    // if !comparePassword(user.Password, input.OldPassword) {
-    //     c.JSON(http.StatusUnauthorized, gin.H{"error": "Incorrect old password"})
-    //     return
-    // }
-
-
-    // 2. Verify old password using Argon2
-    match, err := argon2id.ComparePasswordAndHash(input.OldPassword, user.Password) 
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Error verifying old password"})
-        return
-    }
-    if !match {
+    if !comparePassword(user.Password, input.OldPassword) {
         c.JSON(http.StatusUnauthorized, gin.H{"error": "Incorrect old password"})
         return
     }
 
     // 3. Hash the new password
-    // newPasswordHash := sha256.Sum256([]byte(input.NewPassword))
-    // newPasswordHashedString := hex.EncodeToString(newPasswordHash[:])
-
-    // newPasswordHashed, err := hashPassword(input.NewPassword) 
-    // if err != nil {
-    //     c.JSON(http.StatusInternalServerError, gin.H{"error": "Error hashing new password"})
-    //     return
-    // }
-
-
-  // 3. Hash the new password using Argon2
-    newPasswordHashed, err := argon2id.CreateHash(input.NewPassword, argon2id.DefaultParams)
+    newPasswordHashed, err := hashPassword(input.NewPassword) 
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Error hashing new password"})
         return
     }
 
     // 4. Update the user's password
-    // connect.Database.Model(&user).Update("password", newPasswordHashedString)
-    connect.Database.Model(&user).Update("password", newPasswordHashed) 
-
+    connect.Database.Model(&user).Update("password", newPasswordHashed)
+    
     c.JSON(http.StatusOK, gin.H{"message": "Password updated successfully"})
 }
