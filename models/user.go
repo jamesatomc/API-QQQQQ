@@ -10,8 +10,8 @@ type User struct {
 	Username 	string    	`json:"username" gorm:"unique" validate:"required" `
 	Email    	string    	`json:"email" gorm:"unique" validate:"required,email"`
 	Password 	string    	`json:"password" validate:"required,min=8"`
-	FirstName 	string  	`json:"first_name" validate:"required"`
-	LastName  	string 		`json:"last_name" validate:"required"`
+	FirstName 	string  	`json:"firstname" validate:"required"`
+	LastName  	string 		`json:"lastname" validate:"required"`
 	KYCInput 	KYCInput	`gorm:"foreignKey:UserID"` 
 }
 
