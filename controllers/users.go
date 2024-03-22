@@ -120,25 +120,18 @@ func Login(c *gin.Context) {
 }
 
 func DeleteUser(c *gin.Context) {
-    // Get the user ID from the URL parameter
-    id := c.Param("id")
-
-    // Find the user in the database
-    var user models.User
-    if err := connect.Database.Where("id = ?", id).First(&user).Error; err != nil {
-        if err == gorm.ErrRecordNotFound {
-            c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-        } else {
-            c.JSON(http.StatusInternalServerError, gin.H{"error": "Error deleting user"})
-        }
-        return
-    }
-
-    // Delete the user
-    connect.Database.Delete(&user) 
-
-    c.JSON(http.StatusNoContent, nil) // Return a 204 No Content response
+	// Get model if exist
+	var user models.User
+	if err := connect.Database.Where("usernames = ?", c.Param("id")).First(&user).Error; err != nil {
+	  c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
+	  return
+	}
+  
+	connect.Database.Delete(&user)
+  
+	c.JSON(http.StatusOK, gin.H{"data": true})
 }
+
 func GenerateToken(userID uint) (string, error) {
     token := jwt.New(jwt.SigningMethodHS256)
 
