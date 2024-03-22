@@ -12,7 +12,6 @@ type User struct {
 	Password 	string    	`json:"password" validate:"required,min=8"`
 	FirstName 	string  	`json:"firstname" validate:"required"`
 	LastName  	string 		`json:"lastname" validate:"required"`
-	KYCInput 	KYCInput	`gorm:"foreignKey:UserID"` 
 }
 
 // CreateUserInput represents data for creating a new user
