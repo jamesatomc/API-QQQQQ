@@ -120,16 +120,17 @@ func Login(c *gin.Context) {
 }
 
 func DeleteUser(c *gin.Context) {
-	// Get model if exist
-	var user models.User
-	if err := connect.Database.Where("usernames = ?", c.Param("id")).First(&user).Error; err != nil {
-	  c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
-	  return
-	}
-  
-	connect.Database.Delete(&user)
-  
-	c.JSON(http.StatusOK, gin.H{"data": true})
+    // Get model if exist
+    var user models.User
+    if err := connect.Database.Where("id = ?", c.Param("id")).First(&user).Error; err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
+        return
+    }
+
+    // Authorization (Make sure the user has permissions to delete)
+
+    connect.Database.Delete(&user)
+    c.JSON(http.StatusNoContent, nil) // or gin.H{"message": "User deleted"})
 }
 
 func GenerateToken(userID uint) (string, error) {
