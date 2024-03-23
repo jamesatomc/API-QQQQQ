@@ -39,16 +39,26 @@ func serveApplication() {
 	connect.ConnectDatabase()
 	
 	// ... Your router setup ...
-	server.Use(controllers.AuthenticationMiddleware()) 
+	authRoutes := server.Group("/")
+	authRoutes.Use(controllers.AuthenticationMiddleware()) 
+	{
+		authRoutes.GET("/users", controllers.FindUsers)
+		authRoutes.GET("/users/:id", controllers.FindUser)
+		authRoutes.POST("/register", controllers.CreateUser)
+		authRoutes.POST("/login", controllers.Login)
+		authRoutes.PATCH("/update-users/:id", controllers.UpdateUser)
+		authRoutes.PATCH("/change-password", controllers.UpdatePassword)
+		authRoutes.DELETE("/users/:username",  controllers.DeleteUser)
+	}
 
-	// User
-	server.GET("/users", controllers.FindUsers)
-	server.GET("/users/:id", controllers.FindUser)
-	server.POST("/register", controllers.CreateUser)
-	server.POST("/login", controllers.Login)
-	server.PATCH("/update-users/:id", controllers.UpdateUser)
-	server.PATCH("/change-password", controllers.UpdatePassword)
-    server.DELETE("/users/:username",  controllers.DeleteUser)
+	// // User
+	// server.GET("/users", controllers.FindUsers)
+	// server.GET("/users/:id", controllers.FindUser)
+	// server.POST("/register", controllers.CreateUser)
+	// server.POST("/login", controllers.Login)
+	// server.PATCH("/update-users/:id", controllers.UpdateUser)
+	// server.PATCH("/change-password", controllers.UpdatePassword)
+    // server.DELETE("/users/:username",  controllers.DeleteUser)
 	
 
 	server.Run()

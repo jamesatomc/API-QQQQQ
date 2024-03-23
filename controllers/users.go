@@ -2,9 +2,9 @@ package controllers
 
 // Import necessary packages
 import (
-	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/alexedwards/argon2id"
@@ -79,11 +79,16 @@ func CreateUser(c *gin.Context) {
     result := connect.Database.Create(&user)
         // Error handling:
     if result.Error != nil {
-        // Handle specific errors (e.g., email constraint)
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating user"})
+        // Check if the error is due to a duplicate email
+        if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
+            c.JSON(http.StatusConflict, gin.H{"error": "Email already exists"})
+        } else {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating user"}) 
+        }
         return
-    }
-    
+        }
+
+    connect.Database.Create(&user)
 
     c.JSON(http.StatusOK, gin.H{"data": user})
 }
@@ -230,44 +235,6 @@ func GenerateToken(userID uint, expiration time.Duration) (string, error) {
     return tokenString, nil
 }
 
-// AuthenticationMiddleware function
-func AuthenticationMiddleware() gin.HandlerFunc {
-    return func(c *gin.Context) {
-        // Retrieve token from cookie
-        tokenString, err := c.Cookie("auth_token")
-        if err != nil || tokenString == "" {
-            c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-            c.Abort()
-            return
-        }
-
-        // Validate token
-        token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-            if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-                return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-            }
-            return []byte(os.Getenv("JWT_SECRET_KEY")), nil
-        })
-
-        if err != nil {
-            c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
-            c.Abort()
-            return
-        }
-
-        claims, ok := token.Claims.(jwt.MapClaims)
-        if !ok || !token.Valid {
-            c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-            c.Abort()
-            return
-        }
-
-        userID := uint(claims["user_id"].(float64)) 
-        c.Set("user_id", userID) // Set the user ID in the Gin context
-
-        c.Next() 
-    }
-}
 
 // DeleteUser function
 func DeleteUser(c *gin.Context) {
