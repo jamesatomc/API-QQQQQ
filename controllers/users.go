@@ -280,25 +280,8 @@ func UpdatePassword(c *gin.Context) {
         return
     }
 
-    // 4. Check if the new password is already used
-    for _, oldHash := range user.PasswordHistory {
-        if comparePassword(oldHash, input.NewPassword) {
-            c.JSON(http.StatusBadRequest, gin.H{"error": "You cannot reuse recent passwords"})
-            return
-        }
-    }
-
-    // 5. Update the user's password and history
-    connect.Database.Model(&user).Updates(map[string]interface{}{
-        "password": newPasswordHashed,
-        "password_history": append(user.PasswordHistory, newPasswordHashed), // Add new hash to history
-    })
-
-    // Limit password history (optional)
-    if len(user.PasswordHistory) > 5 { // Store only last 5 passwords
-        user.PasswordHistory = user.PasswordHistory[1:] // Remove oldest
-        connect.Database.Save(&user) 
-    }
+    // 4. Update the user's password
+    connect.Database.Model(&user).Update("password", newPasswordHashed)
     
     c.JSON(http.StatusOK, gin.H{"message": "Password updated successfully"})
 }
