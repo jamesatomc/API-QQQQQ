@@ -62,22 +62,37 @@ func CreateUser(c *gin.Context) {
 		LastName:  input.LastName,
 	}
 
-    result := connect.Database.Create(&user) // Use result instead of directly saving
-
-    // Error handling:
-   if result.Error != nil {
-       // Check if the error is due to a duplicate email
-       if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
-           c.JSON(http.StatusConflict, gin.H{"error": "Email already exists"})
-       } else {
-           c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating user"}) 
-       }
-       return
+    // Check for duplicate username
+    var existingUser models.User
+    if err := connect.Database.Where("username = ?", input.Username).First(&existingUser).Error; err != nil {
+        if err != gorm.ErrRecordNotFound {
+            // Handle other database errors
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Error checking for username"})
+            return
+        }
+        // Record not found - username is available
+    } else {
+        // Username already exists
+        c.JSON(http.StatusConflict, gin.H{"error": "Username already exists"})
+        return
     }
 
-	connect.Database.Create(&user)
+    result := connect.Database.Create(&user) // Use result instead of directly saving
 
-	c.JSON(http.StatusOK, gin.H{"data": user})
+        // Error handling:
+    if result.Error != nil {
+        // Check if the error is due to a duplicate email
+        if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
+            c.JSON(http.StatusConflict, gin.H{"error": "Email already exists"})
+        } else {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating user"}) 
+        }
+        return
+        }
+
+        connect.Database.Create(&user)
+
+        c.JSON(http.StatusOK, gin.H{"data": user})
 }
 
 func FindUser(c *gin.Context) {
