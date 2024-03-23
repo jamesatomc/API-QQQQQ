@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/alexedwards/argon2id"
@@ -70,7 +69,7 @@ func CreateUser(c *gin.Context) {
             c.JSON(http.StatusInternalServerError, gin.H{"error": "Error checking for username"})
             return
         }
-        // Record not found - username is available
+    // Record not found - username is available
     } else {
         // Username already exists
         c.JSON(http.StatusConflict, gin.H{"error": "Username already exists"})
@@ -80,16 +79,11 @@ func CreateUser(c *gin.Context) {
     result := connect.Database.Create(&user)
         // Error handling:
     if result.Error != nil {
-        // Check if the error is due to a duplicate email
-        if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
-            c.JSON(http.StatusConflict, gin.H{"error": "Email already exists"})
-        } else {
-            c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating user"}) 
-        }
+        // Handle specific errors (e.g., email constraint)
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating user"})
         return
-        }
-
-    connect.Database.Create(&user)
+    }
+    
 
     c.JSON(http.StatusOK, gin.H{"data": user})
 }
