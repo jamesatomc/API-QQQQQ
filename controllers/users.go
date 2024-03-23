@@ -90,9 +90,9 @@ func CreateUser(c *gin.Context) {
         return
         }
 
-        connect.Database.Create(&user)
+    connect.Database.Create(&user)
 
-        c.JSON(http.StatusOK, gin.H{"data": user})
+    c.JSON(http.StatusOK, gin.H{"data": user})
 }
 
 // FindUser function
