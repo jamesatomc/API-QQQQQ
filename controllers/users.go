@@ -1,20 +1,19 @@
 package controllers
 
+// Import necessary packages
 import (
-    "net/http"
-    "os"
-    "strings"
-    "time"
 
-    "github.com/alexedwards/argon2id"
-    "github.com/gin-gonic/gin"
-    "github.com/golang-jwt/jwt"
+	"net/http"
+	"os"
+	"strings"
+	"time"
 
-    // "golang.org/x/crypto/bcrypt"
-
-    "github.com/jamesatomc/go-api/db"
-    "github.com/jamesatomc/go-api/models"
-    "gorm.io/gorm"
+	"github.com/alexedwards/argon2id"
+	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
+	"github.com/jamesatomc/go-api/db"
+	"github.com/jamesatomc/go-api/models"
+	"gorm.io/gorm"
 )
 
 // Argon2 Hashing Function
@@ -205,9 +204,10 @@ func Login(c *gin.Context) {
     }
   
     c.JSON(http.StatusOK, gin.H{"token": token})
-  }
+}
   
-  func GenerateToken(userID uint) (string, error) {
+// GenerateToken function
+func GenerateToken(userID uint) (string, error) {
     // Move secret key retrieval and storage outside the function (refer to previous improvements)
     secretKey := os.Getenv("JWT_SECRET_KEY")
   
@@ -225,6 +225,7 @@ func Login(c *gin.Context) {
     return tokenString, nil
 }
 
+// DeleteUser function
 func DeleteUser(c *gin.Context) {
     // Get the username from the request (route parameters, query, etc.)
     username := c.Param("username")  // Example: Assuming username in route parameter
@@ -249,6 +250,7 @@ func DeleteUser(c *gin.Context) {
     c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
 }
 
+// UpdatePassword function
 func UpdatePassword(c *gin.Context) {
     var input models.UpdatePasswordInput
     if err := c.ShouldBindJSON(&input); err != nil {
@@ -284,4 +286,4 @@ func UpdatePassword(c *gin.Context) {
     connect.Database.Model(&user).Update("password", newPasswordHashed)
     
     c.JSON(http.StatusOK, gin.H{"message": "Password updated successfully"})
-}
+} 
