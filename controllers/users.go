@@ -2,7 +2,7 @@ package controllers
 
 // Import necessary packages
 import (
-
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -197,17 +197,28 @@ func Login(c *gin.Context) {
     }
   
     // Generate authentication token (consider using JWT)
-    token, err := GenerateToken(user.ID)
+    token, err := GenerateToken(user.ID, time.Hour*24*7) // Token valid for 1 week
     if err != nil {
       c.JSON(http.StatusInternalServerError, gin.H{"error": "Error generating token"})
       return
     }
+        // Set the token in a secure, HttpOnly cookie 
+        http.SetCookie(c.Writer, &http.Cookie{
+        Name:     "auth_token",
+        Value:    token,
+        Expires:  time.Now().Add(time.Hour * 24 * 7), // 1 week from now
+        HttpOnly: true,   // Prevent JavaScript access 
+        Secure:   true,   // Enforce HTTPS transmission
+        Path:     "/",    // Apply cookie to all paths within the domain
+        SameSite: http.SameSiteStrictMode, // Prevent CSRF
+    })
+    
   
-    c.JSON(http.StatusOK, gin.H{"token": token})
+    c.JSON(http.StatusOK, gin.H{"message": "Login successful"}) // Don't send full token back
 }
   
 // GenerateToken function
-func GenerateToken(userID uint) (string, error) {
+func GenerateToken(userID uint, expiration time.Duration) (string, error) {
     // Move secret key retrieval and storage outside the function (refer to previous improvements)
     secretKey := os.Getenv("JWT_SECRET_KEY")
   
@@ -215,7 +226,7 @@ func GenerateToken(userID uint) (string, error) {
   
     claims := token.Claims.(jwt.MapClaims)
     claims["user_id"] = userID
-    claims["exp"] = time.Now().Add(time.Hour * 24).Unix() // Example expiration
+    claims["exp"] = time.Now().Add(expiration).Unix() // Set expiration
   
     tokenString, err := token.SignedString([]byte(secretKey))
     if err != nil {
@@ -223,6 +234,45 @@ func GenerateToken(userID uint) (string, error) {
     }
   
     return tokenString, nil
+}
+
+// AuthenticationMiddleware function
+func AuthenticationMiddleware() gin.HandlerFunc {
+    return func(c *gin.Context) {
+        // Retrieve token from cookie
+        tokenString, err := c.Cookie("auth_token")
+        if err != nil || tokenString == "" {
+            c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+            c.Abort()
+            return
+        }
+
+        // Validate token
+        token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+            if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+                return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+            }
+            return []byte(os.Getenv("JWT_SECRET_KEY")), nil
+        })
+
+        if err != nil {
+            c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
+            c.Abort()
+            return
+        }
+
+        claims, ok := token.Claims.(jwt.MapClaims)
+        if !ok || !token.Valid {
+            c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+            c.Abort()
+            return
+        }
+
+        userID := uint(claims["user_id"].(float64)) 
+        c.Set("user_id", userID) // Set the user ID in the Gin context
+
+        c.Next() 
+    }
 }
 
 // DeleteUser function

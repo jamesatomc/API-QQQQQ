@@ -38,6 +38,9 @@ func serveApplication() {
 
 	connect.ConnectDatabase()
 	
+	// ... Your router setup ...
+	server.Use(controllers.AuthenticationMiddleware()) 
+
 	// User
 	server.GET("/users", controllers.FindUsers)
 	server.GET("/users/:id", controllers.FindUser)
