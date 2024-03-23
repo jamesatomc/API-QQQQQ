@@ -10,6 +10,7 @@ type User struct {
 	Username 	string    	`json:"username" gorm:"unique" validate:"required" `
 	Email    	string    	`json:"email" gorm:"unique" validate:"required,email"`
 	Password 	string    	`json:"password" validate:"required,min=8"`
+	PasswordHistory []string `json:"-"` // Don't expose this in JSON responses
 	FirstName 	string  	`json:"firstname" validate:"required"`
 	LastName  	string 		`json:"lastname" validate:"required"`
 }
