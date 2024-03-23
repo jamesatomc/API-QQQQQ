@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/alexedwards/argon2id"
@@ -45,6 +46,8 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
+
+
     hashedPassword, err := hashPassword(input.Password)
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Error hashing password"})
@@ -58,6 +61,19 @@ func CreateUser(c *gin.Context) {
 		FirstName: input.FirstName,
 		LastName:  input.LastName,
 	}
+
+    result := connect.Database.Create(&user) // Use result instead of directly saving
+
+    // Error handling:
+   if result.Error != nil {
+       // Check if the error is due to a duplicate email
+       if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
+           c.JSON(http.StatusConflict, gin.H{"error": "Email already exists"})
+       } else {
+           c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating user"}) 
+       }
+       return
+    }
 
 	connect.Database.Create(&user)
 
