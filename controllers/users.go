@@ -46,8 +46,6 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-
-
     hashedPassword, err := hashPassword(input.Password)
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Error hashing password"})
@@ -142,6 +140,22 @@ func UpdateUser(c *gin.Context) {
         } else {
             // Email already exists 
             c.JSON(http.StatusConflict, gin.H{"error": "Email already exists"})
+            return
+        }
+    }
+
+    // Check for duplicate username (if the username is being changed)
+    if input.Username != user.Username {
+        var existingUser models.User
+        if err := connect.Database.Where("username = ?", input.Username).First(&existingUser).Error; err != nil {
+            if err != gorm.ErrRecordNotFound { 
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "Error checking for username"})
+                return
+            } 
+            // else -> Record not found, so username is available
+        } else {
+            // Username already exists 
+            c.JSON(http.StatusConflict, gin.H{"error": "Username already exists"})
             return
         }
     }
