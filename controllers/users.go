@@ -99,19 +99,41 @@ func UpdateUser(c *gin.Context) {
     // Get model if exist
     var user models.User
     if err := connect.Database.Where("id = ?", c.Param("id")).First(&user).Error; err != nil {
-      c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
-      return
+        if err == gorm.ErrRecordNotFound {
+            c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+        } else {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Error finding user"})
+        }
+        return
     }
-  
+
     // Validate input
     var input models.UpdateUserInput
     if err := c.ShouldBindJSON(&input); err != nil {
-      c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-      return
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
     }
-  
+
+    // Check for duplicate email (if the email is being changed)
+    if input.Email != user.Email { // Only check if there's a change
+        var existingUser models.User
+        if err := connect.Database.Where("email = ?", input.Email).First(&existingUser).Error; err != nil {
+            if err != gorm.ErrRecordNotFound { 
+                 // Handle other database errors
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "Error checking for email"})
+                return
+            } 
+            // else -> Record not found, so email is available
+        } else {
+            // Email already exists 
+            c.JSON(http.StatusConflict, gin.H{"error": "Email already exists"})
+            return
+        }
+    }
+
+    // Update the user record 
     connect.Database.Model(&user).Updates(input)
-  
+
     c.JSON(http.StatusOK, gin.H{"data": user})
 }
 
