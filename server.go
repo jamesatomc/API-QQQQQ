@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jamesatomc/go-api/controllers"
@@ -38,6 +39,7 @@ func serveApplication() {
 
 	connect.ConnectDatabase()
 
+	secretKey := os.Getenv("JWT_SECRET_KEY") // Fetch your secret key
 
 	    // User Routes
 		userGroup := server.Group("/users")
@@ -54,15 +56,15 @@ func serveApplication() {
 			// Assuming delete by username
 			userGroup.DELETE("/:username", controllers.DeleteUser)
 
-			// Login
-			userGroup.POST("/login", controllers.Login)
 
-			// Assuming update by ID
-			userGroup.PATCH("/:id", controllers.UpdateUser) 
+			// Routes requiring authentication go within this group
+			userGroup.Use(controllers.AuthenticationMiddleware(secretKey)) 
+			{
+				userGroup.POST("/login", controllers.Login) // Moved inside
+				userGroup.PATCH("/:id", controllers.UpdateUser) 
+				userGroup.PATCH("/change-password", controllers.UpdatePassword)
+			}
 			
-			// Change password
-			userGroup.PATCH("/change-password", controllers.UpdatePassword)
-		
 		}
 	
 
