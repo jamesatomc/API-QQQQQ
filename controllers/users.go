@@ -2,7 +2,6 @@ package controllers
 
 // Import necessary packages
 import (
-	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -220,11 +219,8 @@ func Login(c *gin.Context) {
 func GenerateToken(userID uint, expiration time.Duration) (string, error) {
     // Move secret key retrieval and storage outside the function (refer to previous improvements)
     secretKey := os.Getenv("JWT_SECRET_KEY")
-    if secretKey == "" {
-        return "", fmt.Errorf("JWT_SECRET_KEY environment variable not set")
-    }
 
-    token := jwt.New(jwt.SigningMethodHS256)
+    token := jwt.New(jwt.SigningMethodRS256)
 
     claims := token.Claims.(jwt.MapClaims)
     claims["user_id"] = userID
@@ -232,7 +228,7 @@ func GenerateToken(userID uint, expiration time.Duration) (string, error) {
 
     tokenString, err := token.SignedString([]byte(secretKey))
     if err != nil {
-        return "", err
+      return "", err
     }
 
     return tokenString, nil
