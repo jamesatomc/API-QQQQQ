@@ -38,15 +38,32 @@ func serveApplication() {
 
 	connect.ConnectDatabase()
 	
-	server.Use(controllers.AuthenticationMiddleware("secret_key"))
-	// User
-	server.GET("/users", controllers.FindUsers)
-	server.GET("/users/:id", controllers.FindUser)
-	server.POST("/register", controllers.CreateUser)
-	server.POST("/login", controllers.Login)
-	server.PATCH("/update-users/:id", controllers.UpdateUser)
-	server.PATCH("/change-password", controllers.UpdatePassword)
-    server.DELETE("/users/:username",  controllers.DeleteUser)
+	// server.Use(controllers.AuthenticationMiddleware("secret_key"))
+	// // User
+	// server.GET("/users", controllers.FindUsers)
+	// server.GET("/users/:id", controllers.FindUser)
+	// server.POST("/register", controllers.CreateUser)
+	// server.POST("/login", controllers.Login)
+	// server.PATCH("/update-users/:id", controllers.UpdateUser)
+	// server.PATCH("/change-password", controllers.UpdatePassword)
+    // server.DELETE("/users/:username",  controllers.DeleteUser)
+
+	    // User Routes
+		userGroup := server.Group("/users")
+		{
+			userGroup.GET("/", controllers.FindUsers)
+			userGroup.GET("/:id", controllers.FindUser)
+			userGroup.POST("/register", controllers.CreateUser)
+			userGroup.DELETE("/:username", controllers.DeleteUser)
+	
+			// Routes requiring authentication go within this group
+			userGroup.Use(controllers.AuthenticationMiddleware("secret_key"))
+			{
+				userGroup.POST("/login", controllers.Login)
+				userGroup.PATCH("/:id", controllers.UpdateUser) // Assuming update by ID
+				userGroup.PATCH("/change-password", controllers.UpdatePassword)
+			}
+		}
 	
 
 	server.Run()
