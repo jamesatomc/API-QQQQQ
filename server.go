@@ -38,7 +38,7 @@ func serveApplication() {
 
 	connect.ConnectDatabase()
 	
-
+	server.Use(controllers.AuthenticationMiddleware("secret_key"))
 	// User
 	server.GET("/users", controllers.FindUsers)
 	server.GET("/users/:id", controllers.FindUser)
