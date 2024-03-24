@@ -230,10 +230,10 @@ func GenerateToken(userID uint, expiration time.Duration) (string, error) {
 	claims["user_id"] = userID
 	claims["exp"] = time.Now().Add(expiration).Unix() // Set expiration
 
-    tokenString, err := token.SignedString(secretKey)
-    if err != nil {
-        return "", err
-    }
+	tokenString, err := token.SignedString([]byte(secretKey))
+	if err != nil {
+		return "", err
+	}
 
 	return tokenString, nil
 }
