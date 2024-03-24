@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jamesatomc/go-api/controllers"
 	"github.com/jamesatomc/go-api/db"
-	"github.com/jamesatomc/go-api/middleware"
 	"github.com/jamesatomc/go-api/models"
 	"github.com/joho/godotenv"
 )
@@ -54,19 +53,17 @@ func serveApplication() {
 		// Assuming delete by username
 		userGroup.DELETE("/:username", controllers.DeleteUser)
 
-	}
-
-	authRouter := server.Group("/admin", middleware.Logger()) 
-	{
 		// Assuming login
-		authRouter.POST("/login", controllers.Login)
+		userGroup.POST("/login", controllers.Login)
 
 		// Assuming update by ID
-		authRouter.PATCH("/:id", controllers.UpdateUser) 
-
+		userGroup.PATCH("/:id", controllers.UpdateUser) 
+		
 		// Assuming change password
-		authRouter.PATCH("/change-password", controllers.UpdatePassword)
+		userGroup.PATCH("/change-password", controllers.UpdatePassword)
+
 	}
+
 	
 	server.Run()
 }
