@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jamesatomc/go-api/controllers"
 	"github.com/jamesatomc/go-api/db"
+	"github.com/jamesatomc/go-api/middleware"
 	"github.com/jamesatomc/go-api/models"
 	"github.com/joho/godotenv"
 )
@@ -37,34 +38,35 @@ func serveApplication() {
 	server := gin.Default()
 
 	connect.ConnectDatabase()
-	
-	server.Use(controllers.AuthenticationMiddleware("SECRET_KEY"))
+
+	server.Use(middleware.AuthMiddleware())
 	    // User Routes
-		userGroup := server.Group("/users")
-		{
-			// Assuming get all
-			userGroup.GET("/", controllers.FindUsers)
+	userGroup := server.Group("/users")
+	userGroup.Use(middleware.AuthMiddleware())
+	{
+		// Assuming get all
+		userGroup.GET("/", controllers.FindUsers)
 
-			// Assuming get by ID
-			userGroup.GET("/:id", controllers.FindUser)
+		// Assuming get by ID
+		userGroup.GET("/:id", controllers.FindUser)
 
-			// Register
-			userGroup.POST("/register", controllers.CreateUser)
+		// Register
+		userGroup.POST("/register", controllers.CreateUser)
 
-			// Assuming delete by username
-			userGroup.DELETE("/:username", controllers.DeleteUser)
+		// Assuming delete by username
+		userGroup.DELETE("/:username", controllers.DeleteUser)
 
-			// Assuming login
-			userGroup.POST("/login", controllers.Login)
+		// Assuming login
+		userGroup.POST("/login", controllers.Login)
 
-			// Assuming update by ID
-			userGroup.PATCH("/:id", controllers.UpdateUser) 
+		// Assuming update by ID
+		userGroup.PATCH("/:id", controllers.UpdateUser) 
 
-			// Assuming change password
-			userGroup.PATCH("/change-password", controllers.UpdatePassword)
+		// Assuming change password
+		userGroup.PATCH("/change-password", controllers.UpdatePassword)
 			
-			
-		}
+		
+	}
 	
 
 	server.Run()
