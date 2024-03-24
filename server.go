@@ -37,7 +37,8 @@ func serveApplication() {
 	server := gin.Default()
 
 	connect.ConnectDatabase()
-
+	
+	server.Use(controllers.AuthenticationMiddleware("SECRET_KEY"))
 	    // User Routes
 		userGroup := server.Group("/users")
 		{
