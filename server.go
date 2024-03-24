@@ -39,31 +39,33 @@ func serveApplication() {
 	connect.ConnectDatabase()
 
 	    // User Routes
-	userGroup := server.Group("/users")
-	{
-		// Assuming get all
-		userGroup.GET("/", controllers.FindUsers)
+		userGroup := server.Group("/users")
+		{
+			// Assuming get all
+			userGroup.GET("/", controllers.FindUsers)
 
-		// Assuming get by ID
-		userGroup.GET("/:id", controllers.FindUser)
+			// Assuming get by ID
+			userGroup.GET("/:id", controllers.FindUser)
 
-		// Register
-		userGroup.POST("/register", controllers.CreateUser)
+			// Register
+			userGroup.POST("/register", controllers.CreateUser)
 
-		// Assuming delete by username
-		userGroup.DELETE("/:username", controllers.DeleteUser)
+			// Assuming delete by username
+			userGroup.DELETE("/:username", controllers.DeleteUser)
 
-		// Assuming login
-		userGroup.POST("/login", controllers.Login)
+			// Assuming login
+			userGroup.POST("/login", controllers.Login)
 
-		// Assuming update by ID
-		userGroup.PATCH("/:id", controllers.UpdateUser) 
-		
-		// Assuming change password
-		userGroup.PATCH("/change-password", controllers.UpdatePassword)
+			// Assuming update by ID
+			userGroup.PATCH("/:id", controllers.UpdateUser) 
 
-	}
-
+			// Assuming change password
+			userGroup.PATCH("/change-password", controllers.UpdatePassword)
+			
+			
+		}
 	
+
 	server.Run()
 }
+
