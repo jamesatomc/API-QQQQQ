@@ -50,7 +50,7 @@ func CreateUser(c *gin.Context) {
 
 	hashedPassword, err := hashPassword(input.Password)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error hashing password"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating user."})
 		return
 	}
 
@@ -72,8 +72,8 @@ func CreateUser(c *gin.Context) {
 		}
 		// Record not found - username is available
 	} else {
-		// Username already exists
-		c.JSON(http.StatusConflict, gin.H{"error": "Username already exists"})
+		// Error creating user.
+		c.JSON(http.StatusConflict, gin.H{"error": "Error creating user."})
 		return
 	}
 	// Use result instead of directly saving
@@ -82,7 +82,7 @@ func CreateUser(c *gin.Context) {
 	if result.Error != nil {
 		// Check if the error is due to a duplicate email
 		if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
-			c.JSON(http.StatusConflict, gin.H{"error": "Email already exists"})
+			c.JSON(http.StatusConflict, gin.H{"error": "Error creating user."})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating user"})
 		}
@@ -141,8 +141,8 @@ func UpdateUser(c *gin.Context) {
 			}
 			// else -> Record not found, so email is available
 		} else {
-			// Email already exists
-			c.JSON(http.StatusConflict, gin.H{"error": "Email already exists"})
+			// Error creating user.
+			c.JSON(http.StatusConflict, gin.H{"error": "Error creating user."})
 			return
 		}
 	}
@@ -157,8 +157,8 @@ func UpdateUser(c *gin.Context) {
 			}
 			// else -> Record not found, so username is available
 		} else {
-			// Username already exists
-			c.JSON(http.StatusConflict, gin.H{"error": "Username already exists"})
+			// Error creating user.
+			c.JSON(http.StatusConflict, gin.H{"error": "Error creating user."})
 			return
 		}
 	}
@@ -300,3 +300,5 @@ func UpdatePassword(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Password updated successfully"})
 }
+
+
