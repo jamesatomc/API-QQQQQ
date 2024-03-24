@@ -224,7 +224,7 @@ func GenerateToken(userID uint, expiration time.Duration) (string, error) {
 		return "", fmt.Errorf("JWT_SECRET_KEY environment variable not set")
 	}
 
-	token := jwt.New(jwt.SigningMethodHS256)
+	token := jwt.New(jwt.SigningMethodRS512)
 
 	claims := token.Claims.(jwt.MapClaims)
 	claims["user_id"] = userID
