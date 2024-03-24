@@ -2,7 +2,6 @@ package controllers
 
 // Import necessary packages
 import (
-	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -169,73 +168,71 @@ func UpdateUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": user})
 }
 
-// Login function
 func Login(c *gin.Context) {
-	var input models.User // Use a specific struct for login credentials
+    var input models.User // Use a specific struct for login credentials
 
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+    if err := c.ShouldBindJSON(&input); err != nil {
+      c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+      return
+    }
 
-	var user models.User
-	if err := connect.Database.Where("username = ?", input.Username).First(&user).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			// Avoid revealing if it's username or password issue
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
-			return
-		}
-		// Handle other potential database errors
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error logging in"})
-		return
-	}
+    var user models.User
+    if err := connect.Database.Where("username = ?", input.Username).First(&user).Error; err != nil {
+      if err == gorm.ErrRecordNotFound {
+        // Avoid revealing if it's username or password issue
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+        return
+      }
+      // Handle other potential database errors
+      c.JSON(http.StatusInternalServerError, gin.H{"error": "Error logging in"})
+      return
+    }
 
-	// Compare hashed password
-	if !comparePassword(user.Password, input.Password) {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
-		return
-	}
+    // Compare hashed password
+    if !comparePassword(user.Password, input.Password) {
+      c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+      return
+    }
 
-	// Generate authentication token (consider using JWT)
-	token, err := GenerateToken(user.ID, time.Hour*24*7) // Token valid for 1 week
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error generating token"})
-		return
-	}
-	// Set the token in a secure, HttpOnly cookie
-	http.SetCookie(c.Writer, &http.Cookie{
-		Name:     "auth_token",
-		Value:    token,
-		Expires:  time.Now().Add(time.Hour * 24 * 7), // 1 week from now
-		HttpOnly: true,                               // Prevent JavaScript access
-		Secure:   true,                               // Enforce HTTPS transmission
-		Path:     "/",                                // Apply cookie to all paths within the domain
-		SameSite: http.SameSiteStrictMode,            // Prevent CSRF
-	})
+    // Generate authentication token (consider using JWT)
+    token, err := GenerateToken(user.ID, time.Hour*24*7) // Token valid for 1 week
+    if err != nil {
+      c.JSON(http.StatusInternalServerError, gin.H{"error": "Error generating token"})
+      return
+    }
+        // Set the token in a secure, HttpOnly cookie 
+        http.SetCookie(c.Writer, &http.Cookie{
+        Name:     "auth_token",
+        Value:    token,
+        Expires:  time.Now().Add(time.Hour * 24 * 7), // 1 week from now
+        HttpOnly: true,   // Prevent JavaScript access 
+        Secure:   true,   // Enforce HTTPS transmission
+        Path:     "/",    // Apply cookie to all paths within the domain
+        SameSite: http.SameSiteStrictMode, // Prevent CSRF
+    })
 
-	c.JSON(http.StatusOK, gin.H{"message": "Login successful"}) // Don't send full token back
+
+    c.JSON(http.StatusOK, gin.H{"message": "Login successful"}) 
+
 }
 
 // GenerateToken function
 func GenerateToken(userID uint, expiration time.Duration) (string, error) {
-	// Move secret key retrieval and storage outside the function (refer to previous improvements)
-	secretKey := os.Getenv("JWT_SECRET_KEY")
-	if secretKey == "" {
-		return "", fmt.Errorf("JWT_SECRET_KEY environment variable not set")
-	}
+    // Move secret key retrieval and storage outside the function (refer to previous improvements)
+    secretKey := os.Getenv("JWT_SECRET_KEY")
 
-	token := jwt.New(jwt.SigningMethodRS256)
+    token := jwt.New(jwt.SigningMethodHS256)
 
-	claims := token.Claims.(jwt.MapClaims)
-	claims["user_id"] = userID
-	claims["exp"] = time.Now().Add(expiration).Unix() // Set expiration
+    claims := token.Claims.(jwt.MapClaims)
+    claims["user_id"] = userID
+    claims["exp"] = time.Now().Add(expiration).Unix() // Set expiration
 
-	tokenString, err := token.SignedString([]byte(secretKey))
-	if err != nil {
-		return "", err
-	}
+    tokenString, err := token.SignedString([]byte(secretKey))
+    if err != nil {
+      return "", err
+    }
 
-	return tokenString, nil
+    return tokenString, nil
 }
 
 // DeleteUser function
