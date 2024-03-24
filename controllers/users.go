@@ -197,7 +197,7 @@ func Login(c *gin.Context) {
     }
 
     // Generate authentication token (consider using JWT)
-    token, err := GenerateToken(user.ID, time.Hour*24*7) // Token valid for 1 week
+    tokenString, err := GenerateToken(user.ID, time.Hour*24*7) // Token valid for 1 week
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Error generating token"})
         return
@@ -205,7 +205,7 @@ func Login(c *gin.Context) {
     // Set the token in a secure, HttpOnly cookie
     http.SetCookie(c.Writer, &http.Cookie{
         Name:     "auth_token",
-        Value:    token,
+        Value:    tokenString,
         Expires:  time.Now().Add(time.Hour * 24 * 7), // 1 week from now
         HttpOnly: true,                               // Prevent JavaScript access
         Secure:   true,                               // Enforce HTTPS transmission
