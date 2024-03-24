@@ -2,10 +2,11 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jamesatomc/go-api/db"
 	"github.com/jamesatomc/go-api/controllers"
+	"github.com/jamesatomc/go-api/db"
 	"github.com/jamesatomc/go-api/models"
 	"github.com/joho/godotenv"
 )
@@ -57,7 +58,8 @@ func serveApplication() {
 			userGroup.DELETE("/:username", controllers.DeleteUser)
 	
 			// Routes requiring authentication go within this group
-			userGroup.Use(controllers.AuthenticationMiddleware("secret_key"))
+			secretKey := os.Getenv("SECRET_KEY")
+			userGroup.Use(controllers.AuthenticationMiddleware(secretKey))
 			{
 				userGroup.POST("/login", controllers.Login)
 				userGroup.PATCH("/:id", controllers.UpdateUser) // Assuming update by ID
