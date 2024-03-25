@@ -1,37 +1,58 @@
 package middleware
 
 import (
-	"log"
+	"fmt"
 	"net/http"
-	"os"
+	"strings"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 )
+const secretKey = "fuiwufiquth3uityh3tnc3n23un32ut3667#ys?kxs"
 
 func AuthMiddleware() gin.HandlerFunc {
-    err := godotenv.Load(".env")
-    if err != nil {
-        log.Fatal("Erro ao ler variaveis de ambiente")
-    }
-    requiredToken := os.Getenv("API_TOKEN")
-
-    if requiredToken == "" {
-        log.Fatal("Por favor, defina a variavel API_TOKEN")
-    }
-
     return func(c *gin.Context) {
-        token := c.Request.FormValue("api_token")
-
-        if token == "" {
-            c.JSON(http.StatusBadRequest, gin.H{"message": "Token deve ser preenchido"})
-            return
-        }
-        if token != requiredToken {
-            c.JSON(http.StatusBadRequest, gin.H{"message": "Token invalido"})
+        // Get authorization header
+        authHeader := c.GetHeader("Authorization")
+        if authHeader == "" {
+            c.JSON(http.StatusBadRequest, gin.H{"error": "Authorization header required"})
+            c.Abort()
             return
         }
 
+        // Split into "Bearer <token>"
+        parts := strings.SplitN(authHeader, " ", 2)
+        if len(parts) != 2 || parts[0] != "Bearer" {
+            c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid authorization format"})
+            c.Abort()
+            return
+        }
+
+        tokenString := parts[1]
+
+        // Validate JWT token
+        token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+            // Verify the signing algorithm and secret/key
+            if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+                return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+            }
+            return []byte(secretKey), nil 
+        })
+
+        if err != nil {
+            c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+            c.Abort()
+            return
+        }
+
+        // Extract user data 
+        if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+            userID := claims["user_id"] // Example of extracting data
+            c.Set("user_id", userID)    // Store in Gin context        
+        }
+
+        // ... (rest of your middleware code)
         c.Next()
+        // ...
     }
 }

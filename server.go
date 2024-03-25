@@ -42,6 +42,7 @@ func serveApplication() {
 	server.Use(middleware.AuthMiddleware())
 	    // User Routes
 		userGroup := server.Group("/users")
+		
 		{
 			// Assuming get all
 			userGroup.GET("/", controllers.FindUsers)
