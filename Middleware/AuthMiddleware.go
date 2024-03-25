@@ -45,12 +45,7 @@ func AuthMiddleware() gin.HandlerFunc {
             return
         }
 
-        // Extract user data 
-        if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-            userID := claims["user_id"] // Example of extracting data
-            c.Set("user_id", userID)    // Store in Gin context        
-        }
-
+        if !token.Valid {}
         // ... (rest of your middleware code)
         c.Next()
         // ...
