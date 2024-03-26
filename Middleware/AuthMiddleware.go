@@ -12,7 +12,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		t := time.Now()
 
 		// Set example variable
-		c.Set("jamesadmin", "123456")
+		c.Set("JamesAdmin", "123456")
 
 		// before request
 
