@@ -4,7 +4,6 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jamesatomc/go-api/Middleware"
 	"github.com/jamesatomc/go-api/controllers"
 	"github.com/jamesatomc/go-api/db"
 	"github.com/jamesatomc/go-api/models"
@@ -38,8 +37,6 @@ func serveApplication() {
 	server := gin.Default()
 
 	connect.ConnectDatabase()
-
-	server.Use(middleware.AuthMiddleware())
 	    // User Routes
 		userGroup := server.Group("/users")
 		
