@@ -3,14 +3,13 @@ package controllers
 // Import necessary packages
 import (
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
 	"github.com/alexedwards/argon2id"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt"
 	"github.com/jamesatomc/go-api/db"
+	"github.com/jamesatomc/go-api/helper"
 	"github.com/jamesatomc/go-api/models"
 	"gorm.io/gorm"
 )
@@ -57,8 +56,6 @@ func CreateUser(c *gin.Context) {
 		Username:  input.Username,
 		Email:     input.Email,
 		Password:  hashedPassword,
-		FirstName: input.FirstName,
-		LastName:  input.LastName,
 	}
 
 	// Check for duplicate username
@@ -195,7 +192,7 @@ func Login(c *gin.Context) {
     }
 
     // Generate authentication token (consider using JWT)
-    token, err := GenerateToken(user.ID, time.Hour*24*7) // Token valid for 1 week
+    token, err := helper.GenerateToken(user.ID, time.Hour*24*7) // Token valid for 1 week
     if err != nil {
       c.JSON(http.StatusInternalServerError, gin.H{"error": "Error generating token"})
       return
@@ -216,24 +213,6 @@ func Login(c *gin.Context) {
 
 }
 
-// GenerateToken function
-func GenerateToken(userID uint, expiration time.Duration) (string, error) {
-    // Move secret key retrieval and storage outside the function (refer to previous improvements)
-    secretKey := os.Getenv("JWT_SECRET_KEY")
-
-    token := jwt.New(jwt.SigningMethodHS256)
-
-    claims := token.Claims.(jwt.MapClaims)
-    claims["user_id"] = userID
-    claims["exp"] = time.Now().Add(expiration).Unix() // Set expiration
-
-    tokenString, err := token.SignedString([]byte(secretKey))
-    if err != nil {
-      return "", err
-    }
-
-    return tokenString, nil
-}
 
 // DeleteUser function
 func DeleteUser(c *gin.Context) {
@@ -296,4 +275,27 @@ func UpdatePassword(c *gin.Context) {
 	connect.Database.Model(&user).Update("password", newPasswordHashed)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Password updated successfully"})
+}
+
+
+// Function to add points
+func AddPoints(c *gin.Context) {
+    // Get model if exist
+    var user models.User
+    if err := connect.Database.Where("id = ?", c.Param("id")).First(&user).Error; err != nil {
+        if err == gorm.ErrRecordNotFound {
+            c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+        } else {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Error finding user"})
+        }
+        return
+    }
+
+    // Add points
+    user.Points += 50 // Add 50 points
+
+    // Save the updated user record
+    connect.Database.Save(&user)
+
+    c.JSON(http.StatusOK, gin.H{"data": user})
 }

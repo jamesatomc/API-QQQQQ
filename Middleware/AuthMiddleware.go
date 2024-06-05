@@ -1,30 +1,37 @@
 package middleware
 
 import (
-	"log"
-	"time"
+	"net/http"
+	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
+
 func AuthMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		t := time.Now()
+    return func(c *gin.Context) {
+		secretKey := os.Getenv("JWT_SECRET_KEY")
+        authHeader := c.GetHeader("Authorization")
+        bearerToken := strings.Split(authHeader, " ")
 
-		// Set example variable
-		c.Set("JamesAdmin", "123456")
+        if len(bearerToken) != 2 {
+            c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+            c.Abort()
+            return
+        }
 
-		// before request
+        token := bearerToken[1]
+        // Validate the token here. This is just a placeholder.
+        if token != secretKey {
+            c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+            c.Abort()
+            return
+        }
 
-		c.Next()
-
-		// after request
-		latency := time.Since(t)
-		log.Print(latency)
-
-		// access the status we are sending
-		status := c.Writer.Status()
-		log.Println(status)
-	}
+        c.Next()
+    }
 }
+
+
 
