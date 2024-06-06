@@ -90,10 +90,10 @@ func serveApplication() {
 		}
 
 		// Product Routes
-		productGroup := server.Group("/products") 
+		productGroup := server.Group("/add") 
 		{
 			// Assuming get all products
-			productGroup.POST("/add/products", controllers.CreateProduct)
+			productGroup.POST("/products", controllers.CreateProduct)
 			
 			// Assuming get product by ID
 			productGroup.PATCH("/products/:id", controllers.UpdateProduct)
